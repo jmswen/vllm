@@ -374,7 +374,7 @@ class MPClient(EngineCoreClient):
                     CoreEngine(index=local_start_index, local=True)
                 ]
             else:
-                assert parallel_config.data_parallel_rank == 0
+                # assert parallel_config.data_parallel_rank == 0
                 local_start_index = 0
                 self.core_engines = [
                     CoreEngine(index=i, local=(i < local_engine_count))
@@ -451,8 +451,9 @@ class MPClient(EngineCoreClient):
         handshake_address = get_engine_client_zmq_addr(
             local_only, host, parallel_config.data_parallel_rpc_port)
 
-        with zmq_socket_ctx(handshake_address, zmq.ROUTER,
-                            bind=True) as handshake_socket:
+        with zmq_socket_ctx(handshake_address,
+                            zmq.ROUTER,
+                            bind=start_index == 0) as handshake_socket:
 
             # Start local engines.
             if local_engine_count:

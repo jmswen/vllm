@@ -49,8 +49,8 @@ from vllm.utils import (DEFAULT_MAX_NUM_BATCHED_TOKENS,
                         MULTIMODAL_MODEL_MAX_NUM_BATCHED_TOKENS,
                         POOLING_MODEL_MAX_NUM_BATCHED_TOKENS, GiB_bytes,
                         LayerBlockType, cuda_device_count_stateless,
-                        get_cpu_memory, get_open_port, is_torch_equal_or_newer,
-                        random_uuid, resolve_obj_by_qualname)
+                        get_cpu_memory, is_torch_equal_or_newer, random_uuid,
+                        resolve_obj_by_qualname)
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
@@ -1842,11 +1842,9 @@ class ParallelConfig:
                 f"data_parallel_size_local ({self.data_parallel_size_local}) "
                 f"must be <= data_parallel_size ({self.data_parallel_size})")
 
-        if self.data_parallel_size > 1 or self.data_parallel_size_local == 0:
-            # Data parallel was specified in the engine args.
-            self.data_parallel_master_port = get_open_port()
-        else:
-            # Otherwise fall back to env vars (e.g. for offline SPMD case).
+        # Offline SPMD mode configures DP from env vars. Otherwise, values in
+        # ParallelConfig will be used.
+        if self.data_parallel_size == 1 and self.data_parallel_size_local != 0:
             self.data_parallel_size = envs.VLLM_DP_SIZE
             self.data_parallel_rank = envs.VLLM_DP_RANK
             self.data_parallel_rank_local = envs.VLLM_DP_RANK_LOCAL
